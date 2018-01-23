@@ -21,12 +21,15 @@ function getCookie(cookiename){
 
 //清除cookie  
 function clearCookie(cookiename) {  
-    setCookie(cookiename, "", -1);  
+    setCookie(cookiename, "", -1);
 }
 
 //随机数
-function rnd(n, m){
-	return Math.floor(Math.random()*(m-n+1)+n);
+function rnd(max){
+	//return Math.floor(Math.random()*(m-n+1)+n);
+	return fetch("https://www.random.org/integers/?num=1&min=0&max=" + max + "&col=1&base=10&format=plain&rnd=new").then(resp => {
+		return resp.text()
+	})
 }
 
 //显示提示框
@@ -49,16 +52,22 @@ function hideToast(){
 	clearTimeout(toast_timer);
 }
 
-var $popover = $('.popover'), $lottery = $('#lotterys'), $go = $('#go'), $modal = $('.popover,.modal'), $lottery_num = $('#lottery_num'), total_num = getCookie('LOTTERY_TOTAL_NUM') || 3;
-var canvas = document.getElementById("lotterys"), w = h = 300;  
+var $popover = $('.popover'),
+    $lottery = $('#lotterys'),
+    $go = $('#go'),
+    $leftNameList = $('#leftNameList'),
+    $rightNameList = $('#rightNameList'),
+    $redrawBtn = $('#redraw'),
+    $modal = $('.popover,.modal');
+var canvas = document.getElementById("lotterys"), w = h = 500;  
 var ctx = canvas.getContext("2d");
 var _lottery = {
 	title: [],			 //奖品名称
 	colors: [],			 //奖品区块对应背景颜色
 	endColor: '#FF5B5C', //中奖后区块对应背景颜色
-	outsideRadius: 140,	 //外圆的半径
-	insideRadius: 30,	 //内圆的半径
-	textRadius: 105,	 //奖品位置距离圆心的距离
+	outsideRadius: 250,	 //外圆的半径
+	insideRadius: 0,	 //内圆的半径
+	textRadius: 210,	 //奖品位置距离圆心的距离
 	startAngle: 0,		 //开始角度
 	isLock: false		 //false:停止; ture:旋转
 };
@@ -76,11 +85,11 @@ function drawLottery(lottery_index){
 	  ctx.font = '16px Microsoft YaHei'; //font 属性设置或返回画布上文本内容的当前字体属性
 	  for(var i = 0; i < _lottery.title.length; i++) { 
 		  var angle =  _lottery.startAngle + i * arc;
-		  ctx.fillStyle = _lottery.colors[i];
+		  ctx.fillStyle = _lottery.colors[i%_lottery.colors.length];
 		   
 		  //创建阴影（两者同时使用） shadowBlur:阴影的模糊级数   shadowColor:阴影颜色 【注：相当耗费资源】
-		  //ctx.shadowBlur = 1;  
-		  //ctx.shadowColor = "#fff";  
+		  //ctx.shadowBlur = 1;
+		  //ctx.shadowColor = "#fff";
 		 
 		  ctx.beginPath();
 		  //arc(x,y,r,起始角,结束角,绘制方向) 方法创建弧/曲线（用于创建圆或部分圆）  
@@ -90,7 +99,7 @@ function drawLottery(lottery_index){
 		  ctx.fill();
 		  ctx.save();    
 		  
-		  //----绘制奖品开始----
+		  //----绘制文字开始----
 		  //中奖后改变背景色
 		  if(lottery_index != undefined && i == lottery_index){
 		  	ctx.fillStyle = _lottery.endColor;
@@ -103,32 +112,30 @@ function drawLottery(lottery_index){
 		  y = h / 2 + Math.sin(angle + arc / 2) * _lottery.textRadius;
 		  ctx.translate(x, y); //translate方法重新映射画布上的 (0,0) 位置
 		  ctx.rotate(angle + arc / 2 + Math.PI / 2); //rotate方法旋转当前的绘图
-		  ctx.fillText(text, -ctx.measureText(text).width / 2, 0); //measureText()方法返回包含一个对象，该对象包含以像素计的指定字体宽度
+
+		  //将文字竖排
+		  for(var j = 0; j < text.length; j++) {
+              //绘制有填充的文本
+              ctx.fillText(text[j], -ctx.measureText(text[j]).width / 2, 23*(j)); //measureText()方法返回包含一个对象，该对象包含以像素计的指定字体宽度
+		  }
 		  ctx.restore(); //把当前画布返回（调整）到上一个save()状态之前 
-		  //----绘制奖品结束----
+		  //----绘制文字结束----
 	  	}     
   	}
 }
 
-//旋转转盘  angles：角度; item：奖品位置; txt：提示语;
+//旋转转盘  angles：角度; item：位置; txt：提示语;
 var rotateFn = function (item, angles, txt){
-	_lottery.isLock = !_lottery.isLock;
 	$lottery.stopRotate();
 	$lottery.rotate({
 		angle: 0,
-		animateTo: angles+1800,
-		duration: 8000,
+		animateTo: angles + 7200,
+		duration: 10000,
 		callback: function (){
-			setCookie('LOTTERY_TOTAL_NUM', total_num, 24); //记录剩余次数
 			$modal.hide();
 			drawLottery(item); //中奖后改变背景颜色
-			if(item == 3 || item == 7){
-				$popover.show().find('.m4').show();
-			}else{
-				$popover.show().find('.m5').show().find('font').text(txt);
-				record_log(txt); //插入我的中奖纪录
-			}
-			changeNum(total_num);
+			$popover.show().find('.m5').show().find('font').text(txt);
+			record_log(txt); //插入已中奖纪录
 			_lottery.isLock = !_lottery.isLock;
 		}
 	});
@@ -137,86 +144,58 @@ var rotateFn = function (item, angles, txt){
 //开始抽奖
 function lottery(){
 	if(_lottery.isLock) { showToast('心急吃不了热豆腐哦'); return; }
-	$modal.hide();
-	if(total_num <= 0){
-		$popover.show().find('.m3').show();
-		total_num = 0;
-	}else{
-		var angels = [247, 202, 157, 112, 67, 22, 337, 292]; //对应角度
-		drawLottery();
-		item = rnd(0,7); 
-		rotateFn(item, angels[item], _lottery.title[item]);
-		total_num--;
+	if(_lottery.title.length <= 1) {
+		alert("至少两人参与抽奖");
+		return;
 	}
-}
-
-//抽奖机会次数
-function changeNum(num){
-	$lottery_num.text(num);
-}
-
-//写入我的抽奖记录
-function record_log(txt){
-	var tpl = '', $el = $('.lottery_records');
-	tpl = txt != undefined ? '<li><p>'+txt+'<span>x 1</span></p></li>' : '<li class="empty_record"><p>暂无记录</p></li>';
-	if($el.find('li').hasClass('empty_record') > 0) $el.html('');
-	$el.append(tpl);
-}
-
-//显示微信分享提示
-function share_tips(){
+	_lottery.isLock = !_lottery.isLock;
 	$modal.hide();
-	$popover.show().find('.m6').show();
+	drawLottery();
+	rnd(_lottery.title.length - 1).then(item => {
+	    rotateFn(item, -item * (360/_lottery.title.length) - (360/_lottery.title.length/2) - 90, _lottery.title[+item]);
+	}).catch(_ => {
+	    _lottery.isLock = !_lottery.isLock;
+		alert('调用random.org接口获取随机数失败！')
+	})
+}
+
+//插入已中奖纪录
+function record_log(txt){
+	if(!txt) {
+		$leftNameList.empty();
+	} else {
+	    $leftNameList.append('<div>' + txt + '</div>');
+	    _lottery.title.splice(_lottery.title.indexOf(txt), 1);
+	    $rightNameList.val(_lottery.title.join("\n"));
+	}
 }
 
 //关闭弹出层
 function close_popover(){
 	$popover.hide();
+	drawLottery();
 }
 
 $(function(){
 	
-    //初始化我的抽奖记录
+    //初始化中奖记录
     record_log();
     
-    //初始化抽奖次数
-    changeNum(total_num);
-    
 	//动态添加大转盘的奖品与奖品区域背景颜色
-	_lottery.title = ["奖品一", "奖品二", "奖品三", "谢谢参与", "奖品四", "奖品五", "奖品六 ", "谢谢参与"];
-	_lottery.colors = ["#fe807d", "#fe7771", "#fe807d", "#fe7771","#fe807d", "#fe7771", "#fe807d", "#fe7771"];
+	_lottery.title = ["1号", "2号", "3号", "4号", "5号", "6号", "7号", "8号", "9号", "10号", "11号", "12号", "13号", "14号", "15号"
+	, "16号", "17号", "18号", "19号", "20号", "22号"];
+	$rightNameList.val(_lottery.title.join("\n"));
+	_lottery.colors = ["#fe807d", "#fe7771"];
 
 	//go 点击事件
 	$go.click(function (){
 		lottery();
 	});
-	
-	//领取/分享/再抽一次
-	$('.modal_btns').on('click',function(){
-		var thisId = $(this).attr('id');
-		switch(thisId){
-			case 'share_btn':
-				share_tips();
-			break;
-			case 'receives_btn':
-				window.location.href = 'http://www.hehaibao.com';
-			break;
-			case 'come_again_btn':
-				lottery();
-			break;
-		}
+
+	$redrawBtn.click(_ => {
+		_lottery.title = $rightNameList.val().split("\n").map(_ => _.replace(/\s*/g, "")).filter(_ => {return !!_});
+		drawLottery();
 	});
-	
-	//我的中奖记录和活动规则
-    $('.lottery_btns a').click(function(){
-	    	var theID = $(this).attr('id');
-	    	$modal.hide();
-	    	if(theID == 'btn1'){
-	    		$popover.show().find('.m2').show();
-	    	}else{
-	    		$popover.show().find('.m1').show();
-	    	}
-    });
     
     //关闭弹出层
 	$('.modal.m6, .close_btn').click(function (){
