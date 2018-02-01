@@ -13,16 +13,8 @@
 </head>
 <body>
 <div class="main" style="display: flex; height: 100vh;">
-    <div class="left">
-        <h1 style="margin: 10px 0;">已获奖人员</h1>
-        <div id="leftNameList" class="nameList"></div>
-    </div>
     <!--wrapper-->
     <div id="wrapper" class="fw oh" style="flex: 1;">
-        <canvas id="fireworksBg"></canvas>
-        <div class="lottery_txt tc">
-            <strong class="fd dy05">大奖等你来拿</strong>
-        </div>
         <div class="lottery_box fd dy05">
             <div class="lottery_turntable pr">
                 <div class="turntable fw"></div>
@@ -31,11 +23,24 @@
             </div>
         </div>
     </div>
-    <div class="right">
-        <h1 style="margin: 10px 0;">待抽奖人员</h1>
-        <textarea id="rightNameList" class="nameList"></textarea>
-        <div id="redraw"><a href="javascript:void(0);">确定</a></div>
+    <div class="winners">
+        <!--div id="leftNameList" class="nameList"></div-->
+        <ul>
+            <li class="o1">?</li>
+            <li class="o2">?</li>
+            <li class="o3">?</li>
+            <li class="o4">?</li>
+            <li class="o5">?</li>
+            <li class="o6">?</li>
+        </ul>
     </div>
+</div>
+
+<div class="right">
+    <img src="img/arrow.png">
+    <h1 style="margin: 10px 0;">待抽奖人员</h1>
+    <textarea id="rightNameList" class="nameList"></textarea>
+    <div><a id="redraw" href="javascript:void(0);">确定</a>&emsp;<a id="reset" href="javascript:void(0);">重置</a></div>
 </div>
 
 <!--popover-->
@@ -51,7 +56,6 @@
 <!--js-->
 <script src="js/zepto.min.js"></script>
 <script src="js/zepto.rotate.min.js"></script>
-<script src="js/fireworks.js"></script>
 <script src="js/lottery.js"></script>
 </body>
 </html>

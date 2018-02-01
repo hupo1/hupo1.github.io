@@ -1,28 +1,25 @@
-//横竖屏
-var updateOrientation = function(){ if(window.orientation=='-90' || window.orientation=='90') alert('为了更好的体验，请将手机/平板竖过来！'); };
-window.onorientationchange = updateOrientation;
+const allMember = ["落葵", "连翘", "山楂", "泽兰", "麦冬", "白术", "川贝", "曾青", "甘草", "重楼", "黄柏", "三七", "麦芽", "赤芍", "决明子", "五味子"
+    , "金银花", "龙眼", "桔梗", "陈皮", "琥珀"];
 
-//设置cookie
-function setCookie(cookiename, cookievalue, hours) {
-	var date = new Date();
-	date.setTime(date.getTime() + Number(hours) * 3600 * 1000);
-	document.cookie = cookiename + "=" + cookievalue + "; path=/;expires = " + date.toGMTString();
-}
-
-//获取cookie
-function getCookie(cookiename){
-    var preg = new RegExp("(^| )"+cookiename+"=([^;]*)(;|$)","g");
-    if(preg.test(document.cookie)){
-        return RegExp.$2;
-    }else{
-        return "";
+const shuffle = (deck) => {
+    let randomizedDeck = [];
+    let array = deck;
+    while ( array.length !== 0) {
+        let rIndex = Math.floor(array.length * Math.random());
+        randomizedDeck.push(array[rIndex]);
+        array.splice(rIndex, 1)
     }
-}
+    return randomizedDeck;
+};
 
-//清除cookie  
-function clearCookie(cookiename) {  
-    setCookie(cookiename, "", -1);
-}
+const initialResult = [
+    {w: '.o1', t: '一等奖: ', name: ''},
+    {w: '.o2', t: '二等奖: ', name: ''},
+    {w: '.o3', t: '二等奖: ', name: ''},
+    {w: '.o4', t: '三等奖: ', name: ''},
+    {w: '.o5', t: '三等奖: ', name: ''},
+    {w: '.o6', t: '三等奖: ', name: ''}
+];
 
 //随机数
 function rnd(max){
@@ -52,13 +49,11 @@ function hideToast(){
 	clearTimeout(toast_timer);
 }
 
-var $popover = $('.popover'),
-    $lottery = $('#lotterys'),
+var $lottery = $('#lotterys'),
     $go = $('#go'),
-    $leftNameList = $('#leftNameList'),
     $rightNameList = $('#rightNameList'),
     $redrawBtn = $('#redraw'),
-    $modal = $('.popover,.modal');
+    $resetBtn = $('#reset');
 var canvas = document.getElementById("lotterys"), w = h = 500;  
 var ctx = canvas.getContext("2d");
 var _lottery = {
@@ -93,11 +88,11 @@ function drawLottery(lottery_index){
 		 
 		  ctx.beginPath();
 		  //arc(x,y,r,起始角,结束角,绘制方向) 方法创建弧/曲线（用于创建圆或部分圆）  
-		  ctx.arc(w / 2, h / 2, _lottery.outsideRadius, angle, angle + arc, false);  
+		  ctx.arc(w / 2, h / 2, _lottery.outsideRadius, angle, angle + arc, false);
 		  ctx.arc(w / 2, h / 2, _lottery.insideRadius, angle + arc, angle, true);
 		  ctx.stroke();
 		  ctx.fill();
-		  ctx.save();    
+		  ctx.save();
 		  
 		  //----绘制文字开始----
 		  //中奖后改变背景色
@@ -105,19 +100,14 @@ function drawLottery(lottery_index){
 		  	ctx.fillStyle = _lottery.endColor;
 		  	ctx.fill();
 		  }
-		  ctx.fillStyle = "#fff";
+		  ctx.fillStyle = "#781d00";
 		  
 		  var text = _lottery.title[i], line_height = 17, x, y;
 		  x = w / 2 + Math.cos(angle + arc / 2) * _lottery.textRadius;
 		  y = h / 2 + Math.sin(angle + arc / 2) * _lottery.textRadius;
 		  ctx.translate(x, y); //translate方法重新映射画布上的 (0,0) 位置
 		  ctx.rotate(angle + arc / 2 + Math.PI / 2); //rotate方法旋转当前的绘图
-
-		  //将文字竖排
-		  for(var j = 0; j < text.length; j++) {
-              //绘制有填充的文本
-              ctx.fillText(text[j], -ctx.measureText(text[j]).width / 2, 23*(j)); //measureText()方法返回包含一个对象，该对象包含以像素计的指定字体宽度
-		  }
+          ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
 		  ctx.restore(); //把当前画布返回（调整）到上一个save()状态之前 
 		  //----绘制文字结束----
 	  	}     
@@ -132,10 +122,10 @@ var rotateFn = function (item, angles, txt){
 		animateTo: angles + 7200,
 		duration: 10000,
 		callback: function (){
-			$modal.hide();
+			// $modal.hide();
 			drawLottery(item); //中奖后改变背景颜色
-			$popover.show().find('.m5').show().find('font').text(txt);
-			record_log(txt); //插入已中奖纪录
+			// $popover.show().find('.m5').show().find('font').text(txt);
+			recordResult(txt); //插入已中奖纪录
 			_lottery.isLock = !_lottery.isLock;
 		}
 	});
@@ -148,8 +138,12 @@ function lottery(){
 		alert("至少两人参与抽奖");
 		return;
 	}
+    let record = JSON.parse(localStorage.getItem("record"));
+	if(record[0].name) {
+        alert("所有奖项已产生！");
+        return;
+	}
 	_lottery.isLock = !_lottery.isLock;
-	$modal.hide();
 	drawLottery();
 	rnd(_lottery.title.length - 1).then(item => {
 	    rotateFn(item, -item * (360/_lottery.title.length) - (360/_lottery.title.length/2) - 90, _lottery.title[+item]);
@@ -160,32 +154,49 @@ function lottery(){
 }
 
 //插入已中奖纪录
-function record_log(txt){
-	if(!txt) {
-		$leftNameList.empty();
-	} else {
-	    $leftNameList.append('<div>' + txt + '</div>');
-	    _lottery.title.splice(_lottery.title.indexOf(txt), 1);
-	    $rightNameList.val(_lottery.title.join("\n"));
-	}
+function recordResult(name){
+    let record = localStorage.getItem("record") ? JSON.parse(localStorage.getItem("record")) : initialResult;
+    if(name) {
+        _lottery.title.splice(_lottery.title.indexOf(name), 1);
+        $rightNameList.val(_lottery.title.join("\n"));
+        for(let i = record.length; i--;) {
+            let r = record[i];
+            if(!r.name) {
+                r.name = name;
+                break;
+            }
+        }
+    }
+    localStorage.setItem("allMember", JSON.stringify(_lottery.title));
+    localStorage.setItem("record", JSON.stringify(record));
+    record.forEach(function(item) {
+        $(item.w).html(item.name ? item.t + item.name : '?')
+    });
 }
 
-//关闭弹出层
-function close_popover(){
-	$popover.hide();
-	drawLottery();
+//重新排序
+function reset () {
+    _lottery.title = shuffle(JSON.parse(localStorage.getItem("allMember")));
+    $rightNameList.val(_lottery.title.join("\n"));
+    localStorage.setItem("allMember", JSON.stringify(_lottery.title));
+    localStorage.setItem("record", JSON.stringify(initialResult));
+    recordResult();
+    drawLottery();
 }
 
 $(function(){
-	
-    //初始化中奖记录
-    record_log();
+    //初始化
+	if(!localStorage.getItem("allMember")) {
+        localStorage.setItem("allMember", JSON.stringify(allMember));
+        reset();
+	} else {
+        _lottery.title = JSON.parse(localStorage.getItem("allMember"));
+        recordResult();
+	}
     
 	//动态添加大转盘的奖品与奖品区域背景颜色
-	_lottery.title = ["1号", "2号", "3号", "4号", "5号", "6号", "7号", "8号", "9号", "10号", "11号", "12号", "13号", "14号", "15号"
-	, "16号", "17号", "18号", "19号", "20号", "22号"];
 	$rightNameList.val(_lottery.title.join("\n"));
-	_lottery.colors = ["#fe807d", "#fe7771"];
+	_lottery.colors = ["#edbf20", "#edbf20"];
 
 	//go 点击事件
 	$go.click(function (){
@@ -194,11 +205,19 @@ $(function(){
 
 	$redrawBtn.click(_ => {
 		_lottery.title = $rightNameList.val().split("\n").map(_ => _.replace(/\s*/g, "")).filter(_ => {return !!_});
-		drawLottery();
+        localStorage.setItem("allMember", JSON.stringify(_lottery.title));
+    	reset ();
 	});
-    
-    //关闭弹出层
-	$('.modal.m6, .close_btn').click(function (){
-		close_popover();
-	});
+
+    $resetBtn.click(_ => {
+        localStorage.setItem("allMember", JSON.stringify(allMember));
+    	reset();
+	})
+
+	$('.right img').click(function() {
+        $('.right').css({
+            right: $('.right').css('right') === '0px' ? '-200px' : 0
+        });
+        $(this).toggleClass('expand');
+    });
 });
