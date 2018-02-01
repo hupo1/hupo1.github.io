@@ -88,8 +88,8 @@ function drawLottery(lottery_index){
 		 
 		  ctx.beginPath();
 		  //arc(x,y,r,起始角,结束角,绘制方向) 方法创建弧/曲线（用于创建圆或部分圆）  
-		  ctx.arc(w / 2, h / 2, _lottery.outsideRadius, angle, angle + arc, false);
-		  ctx.arc(w / 2, h / 2, _lottery.insideRadius, angle + arc, angle, true);
+		  ctx.arc(w / 2, h / 2, _lottery.outsideRadius, angle + 0.001, angle + arc - 0.001, false);
+		  ctx.arc(w / 2, h / 2, _lottery.insideRadius, angle + arc - 0.001, angle + 0.001, true);
 		  ctx.stroke();
 		  ctx.fill();
 		  ctx.save();
