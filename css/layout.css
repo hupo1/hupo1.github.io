@@ -144,6 +144,8 @@ a {
     justify-content: center;
     align-items: center;
     margin: 1rem 0;
+    min-width: 190px;
+    min-height: 60px;
 }
 
 .lottery_lf {
@@ -311,7 +313,7 @@ a {
     width: 60%;
     max-width: 500px;
     position: relative;
-    margin: 120px auto 0;
+    margin: 100px auto 0;
     top: 30%;
     z-index: 99999;
     display: none;
@@ -432,8 +434,8 @@ a {
 }
 
 .modal p.tip_txt {
-    margin: 65px auto 10px;
-    font-size: 2.2rem;
+    margin: 85px auto 10px;
+    font-size: 3.2rem;
 }
 
 .ok {
@@ -464,6 +466,11 @@ a {
 /*animation*/
 .fd {
     -webkit-animation: fd 1s ease both;
+    animation: fd 1s ease both;
+}
+.fo {
+    -webkit-animation: fo 1s ease both;
+    animation: fo 1s ease both;
 }
 
 .dy02 {
@@ -486,6 +493,17 @@ a {
     to {
         -webkit-opacity: 1;
         opacity: 1;
+    }
+}
+
+@-webkit-keyframes fo {
+    from {
+        -webkit-opacity: 1;
+        opacity: 1;
+    }
+    to {
+        -webkit-opacity: 0;
+        opacity: 0;
     }
 }
 

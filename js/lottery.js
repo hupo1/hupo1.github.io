@@ -49,11 +49,13 @@ function hideToast(){
 	clearTimeout(toast_timer);
 }
 
-var $lottery = $('#lotterys'),
+var $popover = $('.popover'),
+	$lottery = $('#lotterys'),
     $go = $('#go'),
     $rightNameList = $('#rightNameList'),
     $redrawBtn = $('#redraw'),
-    $resetBtn = $('#reset');
+    $resetBtn = $('#reset'),
+    $modal = $('.popover,.modal');
 var canvas = document.getElementById("lotterys"), w = h = 500;  
 var ctx = canvas.getContext("2d");
 var _lottery = {
@@ -122,9 +124,15 @@ var rotateFn = function (item, angles, txt){
 		animateTo: angles + 7200,
 		duration: 10000,
 		callback: function (){
-			// $modal.hide();
 			drawLottery(item); //中奖后改变背景颜色
-			// $popover.show().find('.m5').show().find('font').text(txt);
+			$popover.show().find('.m5').show().find('font').text(txt);
+			setTimeout(_ => {
+                $popover.addClass('fo');
+					setTimeout(_ => {
+						$popover.hide();
+            			$popover.removeClass('fo');
+				}, 1000);
+			}, 2000);
 			recordResult(txt); //插入已中奖纪录
 			_lottery.isLock = !_lottery.isLock;
 		}
@@ -172,6 +180,11 @@ function recordResult(name){
     record.forEach(function(item) {
         $(item.w).html(item.name ? item.t + item.name : '?')
     });
+}
+
+//关闭弹出层
+function close_popover(){
+    $popover.hide();
 }
 
 //重新排序
