@@ -125,7 +125,7 @@ var rotateFn = function (item, angles, txt){
 		duration: 10000,
 		callback: function (){
 			drawLottery(item); //中奖后改变背景颜色
-			$popover.show().find('.m5').show().find('font').text(txt);
+			$popover.show().find('.m5').show().find('.font').text(txt);
 			setTimeout(_ => {
                 $popover.addClass('fo');
 					setTimeout(_ => {
